@@ -389,5 +389,29 @@ Contains
         Endif
 
     End Subroutine LM_load_balance
-
+!
+!!!!!!!!!!!!!!!!!!!!!!!
+!
+!   Integer Function Find_local_sph_mode_address(l, m)
+!     Return local spherical harmonics addless for Y_{l}^{m}
+!     If process does not have given mode, function returns 0
+!
+!!!!!!!!!!!!!!!!!!!!!!!
+!
+    Integer Function Find_local_sph_mode_address(l, m)
+!
+    integer, intent(in) :: l, m
+    integer :: j
+!
+    Find_local_sph_mode_address = 0
+    do j = 1, lm_count
+      if (l_lm_values(j).eq.l .and. m_lm_values(j).eq. m) then
+         Find_local_sph_mode_address = j
+        return
+      end if
+    end do
+    end function Find_local_sph_mode_address
+!
+!!!!!!!!!!!!!!!!!!!!!!!
+!
 End Module Load_Balance
