@@ -62,7 +62,9 @@ Program Main!
         Call Test_Lib()
     Else
         Call Main_Initialization()
-        Call Main_Loop_Sphere()
+             write(*,*) 'my_theta', my_rank, my_r%min, my_r%max, &
+     &        my_theta%min, my_theta%max
+!        Call Main_Loop_Sphere()
     Endif
     Call Finalization()
 
