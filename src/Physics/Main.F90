@@ -64,7 +64,7 @@ Program Main!
         Call Main_Initialization()
              write(*,*) 'my_theta', my_rank, my_r%min, my_r%max, &
      &        my_theta%min, my_theta%max
-!        Call Main_Loop_Sphere()
+        Call Main_Loop_Sphere()
     Endif
     Call Finalization()
 
