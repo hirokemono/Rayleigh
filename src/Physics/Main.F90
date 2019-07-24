@@ -48,7 +48,9 @@ Program Main!
 
     Implicit None
 
-       integer :: kr, lt
+       integer :: ip, kr, lt
+       integer, allocatable :: kr_min(:), kr_mat(:)
+       integer, allocatable :: lt_min(:), lt_max(:)
 
     Call Main_MPI_Init(global_rank)   !Initialize MPI
 
@@ -64,10 +66,35 @@ Program Main!
         Call Test_Lib()
     Else
         Call Main_Initialization()
-             write(*,*) 'my_rank, r_min_lc, r_max_lc, ',                &
+!
+           if(global_rank .eq. 0) then
+             allocate(kr_min(pfi%wcomm%np))
+             allocate(kr_mat(pfi%wcomm%np))
+             allocate(lt_min(pfi%wcomm%np))
+             allocate(lt_max(pfi%wcomm%np))
+           end if
+
+           call MPI_Gather(my_r%min, 1, MPI_INTEGER,                    &
+     &                     kr_min, 1, MPI_INTEGER,                      &
+     &                     0, pfi%wcomm%comm, ierror)
+           call MPI_Gather(my_r%max, 1, MPI_INTEGER,                    &
+     &                     kr_max, 1, MPI_INTEGER,                      &
+     &                     0, pfi%wcomm%comm, ierror)
+           call MPI_Gather(my_theta%min, 1, MPI_INTEGER,                &
+     &                     lt_min, 1, MPI_INTEGER,                      &
+     &                     0, pfi%wcomm%comm, ierror)
+           call MPI_Gather(my_theta%max, 1, MPI_INTEGER,                &
+     &                     lt_max, 1, MPI_INTEGER,                      &
+     &                     0, pfi%wcomm%comm, ierror)
+!
+           if(global_rank .eq. 0) then
+               write(*,*) 'my_rank, r_min_lc, r_max_lc, ',              &
      &                 'theta_min_lc, theta_max_lc'
-             write(*,*)  my_rank, my_r%min, my_r%max,                   &
-     &                  my_theta%min, my_theta%max
+             do ip = 1, pfi%wcomm%np
+               write(*,*) ip, kr_min(ip), kr_max(ip),                   &
+     &                   lt_min(ip), lt_max(ip)
+             end do
+!
              write(*,*)  'kr, r'
              do kr = 1, N_r
                write(*,*) kr, radius(kr)
@@ -76,6 +103,9 @@ Program Main!
              do lt = 1, n_theta
                write(*,*) lt, coloc(lt), acos(coloc(lt))
              end do
+             deallocate(kr_min, kr_mat, lt_min, lt_max)
+           end if
+!
         Call Main_Loop_Sphere()
     Endif
     Call Finalization()
