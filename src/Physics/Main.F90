@@ -144,10 +144,6 @@ Contains
 !
 ! ----------------------------------------------------------------------
 !
-      contains
-!
-! ----------------------------------------------------------------------
-!
     subroutine output_resolution_kemo()
 !
     Use Controls
@@ -156,6 +152,10 @@ Contains
     Use Input
     Use Checkpointing
 !
+       integer :: ip, kr, lt, ierr_kemo
+       integer, allocatable :: kr_min(:), kr_max(:)
+       integer, allocatable :: lt_min(:), lt_max(:)
+
         if(global_rank .eq. 0) then
           allocate(kr_min(pfi%wcomm%np))
           allocate(kr_max(pfi%wcomm%np))
@@ -196,6 +196,10 @@ Contains
           close(12)
           deallocate(kr_min, kr_max, lt_min, lt_max)
         end if
+!
+!      call copy_resolution_4_rayleigh(N_r, n_theta, l_max,            &
+!     &    my_r%min, my_r%max, my_theta%min, my_theta%max,             &
+!     &    radius, coloc, r_reso)
 !
     end subroutine output_resolution_kemo
 !
