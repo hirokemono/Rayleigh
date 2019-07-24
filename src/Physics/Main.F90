@@ -48,10 +48,6 @@ Program Main!
 
     Implicit None
 
-       integer :: ip, kr, lt, ierr_kemo
-       integer, allocatable :: kr_min(:), kr_max(:)
-       integer, allocatable :: lt_min(:), lt_max(:)
-
     Call Main_MPI_Init(global_rank)   !Initialize MPI
 
     Call Check_Run_Mode()   !This needs to be done before ever reading main input (handles multiple runs)
