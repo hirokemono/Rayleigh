@@ -166,10 +166,10 @@ Contains
           allocate(lt_max(pfi%wcomm%np))
         end if
 
-        call MPI_Gather(pfi%rgrp%rank, 1, MPI_INTEGER,                  &
+        call MPI_Gather(pfi%rcomm%rank, 1, MPI_INTEGER,                 &
      &                  r_rank, 1, MPI_INTEGER,                         &
      &                  0, pfi%wcomm%comm, ierr_kemo)
-        call MPI_Gather(pfi%cgrp%rank, 1, MPI_INTEGER,                  &
+        call MPI_Gather(pfi%ccomm%rank, 1, MPI_INTEGER,                 &
      &                  h_rank, 1, MPI_INTEGER,                         &
      &                  0, pfi%wcomm%comm, ierr_kemo)
         call MPI_Gather(my_r%min, 1, MPI_INTEGER,                       &
@@ -208,7 +208,7 @@ Contains
         end if
 !
 !      call copy_resolution_4_rayleigh                                 &
-!     &   (pfi%rgrp%rank, pfi%cgrp%rank, N_r, n_theta, l_max,          &
+!     &   (pfi%rcomm%rank, pfi%ccomm%rank, N_r, n_theta, l_max,        &
 !     &    my_r%min, my_r%max, my_theta%min, my_theta%max,             &
 !     &    radius, coloc, r_reso)
 !      call write_resolution_4_rayleigh                                &
