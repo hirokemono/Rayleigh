@@ -153,16 +153,25 @@ Contains
     Use Checkpointing
 !
        integer :: ip, kr, lt, ierr_kemo
+       integer, allocatable :: r_rank(:), c_ranks(:)
        integer, allocatable :: kr_min(:), kr_max(:)
        integer, allocatable :: lt_min(:), lt_max(:)
 
         if(global_rank .eq. 0) then
+          allocate(r_rank(pfi%wcomm%np))
+          allocate(c_rank(pfi%wcomm%np))
           allocate(kr_min(pfi%wcomm%np))
           allocate(kr_max(pfi%wcomm%np))
           allocate(lt_min(pfi%wcomm%np))
           allocate(lt_max(pfi%wcomm%np))
         end if
 
+        call MPI_Gather(row_rank, 1, MPI_INTEGER,                       &
+     &                  r_rank, 1, MPI_INTEGER,                         &
+     &                  0, pfi%wcomm%comm, ierr_kemo)
+        call MPI_Gather(col_rank, 1, MPI_INTEGER,                       &
+     &                  c_rank, 1, MPI_INTEGER,                         &
+     &                  0, pfi%wcomm%comm, ierr_kemo)
         call MPI_Gather(my_r%min, 1, MPI_INTEGER,                       &
      &                  kr_min, 1, MPI_INTEGER,                         &
      &                  0, pfi%wcomm%comm, ierr_kemo)
@@ -178,28 +187,31 @@ Contains
 !
         if(global_rank .eq. 0) then
           open(12, file = 'Rayleigh_grid_kemo.dat')
-          write(12,*) 'my_rank, r_min_lc, r_max_lc, ',                  &
+          write(12,'(2a)') 'my_rank, r_min_lc, r_max_lc, ',             &
      &                 'theta_min_lc, theta_max_lc'
           do ip = 1, pfi%wcomm%np
-            write(12,*) ip, kr_min(ip), kr_max(ip),                     &
-     &                   lt_min(ip), lt_max(ip)
+            write(12,'(7i16)') ip, r_rank(ip), c_rank(ip),              &
+     &                  kr_min(ip), kr_max(ip), lt_min(ip), lt_max(ip)
           end do
 !
-          write(12,*)  N_r, 'kr, r'
+          write(12,'(i16,a)')  N_r, 'kr, r'
           do kr = 1, N_r
-            write(12,*) kr, radius(kr)
+            write(12,'(i16,1p2e25.15)') kr, radius(kr)
           end do
           write(12,*)  l_max, n_theta, 'lt, cos(theta), theta'
           do lt = 1, n_theta
-            write(12,*) lt, coloc(lt), acos(coloc(lt))
+            write(12,'(i16,1p2e25.15)') lt, coloc(lt), acos(coloc(lt))
           end do
           close(12)
           deallocate(kr_min, kr_max, lt_min, lt_max)
+          deallocate(r_rank, c_rank)
         end if
 !
 !      call copy_resolution_4_rayleigh(N_r, n_theta, l_max,            &
 !     &    my_r%min, my_r%max, my_theta%min, my_theta%max,             &
 !     &    radius, coloc, r_reso)
+!      call write_resolution_4_rayleigh                                &
+!     &   ('Rayleigh_grid_kemo.dat', r_reso)
 !
     end subroutine output_resolution_kemo
 !
