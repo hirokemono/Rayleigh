@@ -48,6 +48,8 @@ Program Main!
 
     Implicit None
 
+       integer :: kr, lt
+
     Call Main_MPI_Init(global_rank)   !Initialize MPI
 
     Call Check_Run_Mode()   !This needs to be done before ever reading main input (handles multiple runs)
@@ -62,8 +64,18 @@ Program Main!
         Call Test_Lib()
     Else
         Call Main_Initialization()
-             write(*,*) 'my_theta', my_rank, my_r%min, my_r%max, &
-     &        my_theta%min, my_theta%max
+             write(*,*) 'my_rank, r_min_lc, r_max_lc, ',                &
+     &                 'theta_min_lc, theta_max_lc'
+             write(*,*)  my_rank, my_r%min, my_r%max,                   &
+     &                  my_theta%min, my_theta%max
+             write(*,*)  'kr, r'
+             do kr = 1, N_r
+               write(*,*) kr, radius(kr)
+             end do
+             write(*,*)  'lt, cos(theta), theta'
+             do lt = 1, n_theta
+               write(*,*) lt, coloc(lt), acos(coloc(lt))
+             end do
         Call Main_Loop_Sphere()
     Endif
     Call Finalization()
