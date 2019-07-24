@@ -48,8 +48,8 @@ Program Main!
 
     Implicit None
 
-       integer :: ip, kr, lt
-       integer, allocatable :: kr_min(:), kr_mat(:)
+       integer :: ip, kr, lt, ierr_kemo
+       integer, allocatable :: kr_min(:), kr_max(:)
        integer, allocatable :: lt_min(:), lt_max(:)
 
     Call Main_MPI_Init(global_rank)   !Initialize MPI
@@ -67,44 +67,7 @@ Program Main!
     Else
         Call Main_Initialization()
 !
-           if(global_rank .eq. 0) then
-             allocate(kr_min(pfi%wcomm%np))
-             allocate(kr_mat(pfi%wcomm%np))
-             allocate(lt_min(pfi%wcomm%np))
-             allocate(lt_max(pfi%wcomm%np))
-           end if
-
-           call MPI_Gather(my_r%min, 1, MPI_INTEGER,                    &
-     &                     kr_min, 1, MPI_INTEGER,                      &
-     &                     0, pfi%wcomm%comm, ierror)
-           call MPI_Gather(my_r%max, 1, MPI_INTEGER,                    &
-     &                     kr_max, 1, MPI_INTEGER,                      &
-     &                     0, pfi%wcomm%comm, ierror)
-           call MPI_Gather(my_theta%min, 1, MPI_INTEGER,                &
-     &                     lt_min, 1, MPI_INTEGER,                      &
-     &                     0, pfi%wcomm%comm, ierror)
-           call MPI_Gather(my_theta%max, 1, MPI_INTEGER,                &
-     &                     lt_max, 1, MPI_INTEGER,                      &
-     &                     0, pfi%wcomm%comm, ierror)
-!
-           if(global_rank .eq. 0) then
-               write(*,*) 'my_rank, r_min_lc, r_max_lc, ',              &
-     &                 'theta_min_lc, theta_max_lc'
-             do ip = 1, pfi%wcomm%np
-               write(*,*) ip, kr_min(ip), kr_max(ip),                   &
-     &                   lt_min(ip), lt_max(ip)
-             end do
-!
-             write(*,*)  'kr, r'
-             do kr = 1, N_r
-               write(*,*) kr, radius(kr)
-             end do
-             write(*,*)  'lt, cos(theta), theta'
-             do lt = 1, n_theta
-               write(*,*) lt, coloc(lt), acos(coloc(lt))
-             end do
-             deallocate(kr_min, kr_mat, lt_min, lt_max)
-           end if
+        Call output_resolution_kemo()
 !
         Call Main_Loop_Sphere()
     Endif
@@ -182,4 +145,64 @@ Contains
         Endif
         Call pfi%exit()
     End Subroutine Finalization
+!
+! ----------------------------------------------------------------------
+!
+      contains
+!
+! ----------------------------------------------------------------------
+!
+    subroutine output_resolution_kemo()
+!
+    Use Controls
+    Use Parallel_Framework
+    Use ProblemSize
+    Use Input
+    Use Checkpointing
+!
+        if(global_rank .eq. 0) then
+          allocate(kr_min(pfi%wcomm%np))
+          allocate(kr_max(pfi%wcomm%np))
+          allocate(lt_min(pfi%wcomm%np))
+          allocate(lt_max(pfi%wcomm%np))
+        end if
+
+        call MPI_Gather(my_r%min, 1, MPI_INTEGER,                       &
+     &                  kr_min, 1, MPI_INTEGER,                         &
+     &                  0, pfi%wcomm%comm, ierr_kemo)
+        call MPI_Gather(my_r%max, 1, MPI_INTEGER,                       &
+     &                  kr_max, 1, MPI_INTEGER,                         &
+     &                  0, pfi%wcomm%comm, ierr_kemo)
+        call MPI_Gather(my_theta%min, 1, MPI_INTEGER,                   &
+     &                  lt_min, 1, MPI_INTEGER,                         &
+     &                  0, pfi%wcomm%comm, ierr_kemo)
+        call MPI_Gather(my_theta%max, 1, MPI_INTEGER,                   &
+     &                  lt_max, 1, MPI_INTEGER,                         &
+     &                  0, pfi%wcomm%comm, ierr_kemo)
+!
+        if(global_rank .eq. 0) then
+          open(12, file = 'Rayleigh_grid_kemo.dat')
+          write(12,*) 'my_rank, r_min_lc, r_max_lc, ',                  &
+     &                 'theta_min_lc, theta_max_lc'
+          do ip = 1, pfi%wcomm%np
+            write(12,*) ip, kr_min(ip), kr_max(ip),                     &
+     &                   lt_min(ip), lt_max(ip)
+          end do
+!
+          write(12,*)  N_r, 'kr, r'
+          do kr = 1, N_r
+            write(12,*) kr, radius(kr)
+          end do
+          write(12,*)  l_max, n_theta, 'lt, cos(theta), theta'
+          do lt = 1, n_theta
+            write(12,*) lt, coloc(lt), acos(coloc(lt))
+          end do
+          close(12)
+          deallocate(kr_min, kr_max, lt_min, lt_max)
+        end if
+!
+    end subroutine output_resolution_kemo
+!
+! ----------------------------------------------------------------------
+!
 End Program Main
