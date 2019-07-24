@@ -153,24 +153,24 @@ Contains
     Use Checkpointing
 !
        integer :: ip, kr, lt, ierr_kemo
-       integer, allocatable :: r_rank(:), c_ranks(:)
+       integer, allocatable :: r_rank(:), h_rank(:)
        integer, allocatable :: kr_min(:), kr_max(:)
        integer, allocatable :: lt_min(:), lt_max(:)
 
         if(global_rank .eq. 0) then
           allocate(r_rank(pfi%wcomm%np))
-          allocate(c_rank(pfi%wcomm%np))
+          allocate(h_rank(pfi%wcomm%np))
           allocate(kr_min(pfi%wcomm%np))
           allocate(kr_max(pfi%wcomm%np))
           allocate(lt_min(pfi%wcomm%np))
           allocate(lt_max(pfi%wcomm%np))
         end if
 
-        call MPI_Gather(row_rank, 1, MPI_INTEGER,                       &
+        call MPI_Gather(pfi%rgrp%rank, 1, MPI_INTEGER,                  &
      &                  r_rank, 1, MPI_INTEGER,                         &
      &                  0, pfi%wcomm%comm, ierr_kemo)
-        call MPI_Gather(col_rank, 1, MPI_INTEGER,                       &
-     &                  c_rank, 1, MPI_INTEGER,                         &
+        call MPI_Gather(pfi%cgrp%rank, 1, MPI_INTEGER,                  &
+     &                  h_rank, 1, MPI_INTEGER,                         &
      &                  0, pfi%wcomm%comm, ierr_kemo)
         call MPI_Gather(my_r%min, 1, MPI_INTEGER,                       &
      &                  kr_min, 1, MPI_INTEGER,                         &
@@ -190,7 +190,7 @@ Contains
           write(12,'(2a)') 'my_rank, r_min_lc, r_max_lc, ',             &
      &                 'theta_min_lc, theta_max_lc'
           do ip = 1, pfi%wcomm%np
-            write(12,'(7i16)') ip, r_rank(ip), c_rank(ip),              &
+            write(12,'(7i16)') ip, r_rank(ip), h_rank(ip),              &
      &                  kr_min(ip), kr_max(ip), lt_min(ip), lt_max(ip)
           end do
 !
@@ -204,10 +204,11 @@ Contains
           end do
           close(12)
           deallocate(kr_min, kr_max, lt_min, lt_max)
-          deallocate(r_rank, c_rank)
+          deallocate(r_rank, h_rank)
         end if
 !
-!      call copy_resolution_4_rayleigh(N_r, n_theta, l_max,            &
+!      call copy_resolution_4_rayleigh                                 &
+!     &   (pfi%rgrp%rank, pfi%cgrp%rank, N_r, n_theta, l_max,          &
 !     &    my_r%min, my_r%max, my_theta%min, my_theta%max,             &
 !     &    radius, coloc, r_reso)
 !      call write_resolution_4_rayleigh                                &
